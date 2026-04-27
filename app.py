@@ -217,14 +217,14 @@ def start_telebot_thread():
                 watch_stat = extract_calories_ocr(file_path)
                 conn = get_db_connection()
                 if isinstance(watch_stat, float):
-                    conn.execute("INSERT OR IGNORE INTO ActividadDiaria (id_usuario, fecha) VALUES (?, ?)", (id_usuario, fecha_str))
+                    conn.execute("INSERT INTO ActividadDiaria (id_usuario, fecha) VALUES (?, ?) ON CONFLICT DO NOTHING", (id_usuario, fecha_str))
                     conn.execute("UPDATE ActividadDiaria SET calorias_activas = calorias_activas + ? WHERE fecha = ? AND id_usuario=?", (watch_stat, fecha_str, id_usuario))
                     conn.commit()
                     bot.reply_to(message, f"🏃‍♂️🔥 ¡Gasto guardado automágicamente! Detecté {watch_stat} kcal para el {fecha_str}.")
                 elif isinstance(watch_stat, dict) and watch_stat:
                     total_kcal = 0
                     for d_str, cals in watch_stat.items():
-                        conn.execute("INSERT OR IGNORE INTO ActividadDiaria (id_usuario, fecha) VALUES (?, ?)", (id_usuario, d_str))
+                        conn.execute("INSERT INTO ActividadDiaria (id_usuario, fecha) VALUES (?, ?) ON CONFLICT DO NOTHING", (id_usuario, d_str))
                         conn.execute("UPDATE ActividadDiaria SET calorias_activas = calorias_activas + ? WHERE fecha = ? AND id_usuario=?", (cals, d_str, id_usuario))
                         total_kcal += cals
                     conn.commit()
@@ -248,7 +248,7 @@ def start_telebot_thread():
             
             val = float(num_match.group(1).replace(',', '.'))
             conn = get_db_connection()
-            conn.execute("INSERT OR IGNORE INTO ActividadDiaria (id_usuario, fecha) VALUES (?, ?)", (id_usuario, fecha_str))
+            conn.execute("INSERT INTO ActividadDiaria (id_usuario, fecha) VALUES (?, ?) ON CONFLICT DO NOTHING", (id_usuario, fecha_str))
             conn.execute("UPDATE ActividadDiaria SET calorias_activas = calorias_activas + ? WHERE fecha = ? AND id_usuario=?", (val, fecha_str, id_usuario))
             conn.commit(); conn.close()
             bot.reply_to(message, f"🔥 ¡Anotado! Sumé {val} kcal de actividad al {fecha_str}.")
@@ -782,7 +782,7 @@ def main():
 
     # Solo crear log de actividad si hay un usuario seleccionado
     if u_id:
-        conn.execute("INSERT OR IGNORE INTO ActividadDiaria (id_usuario, fecha) VALUES (?, ?)", (u_id, hoy))
+        conn.execute("INSERT INTO ActividadDiaria (id_usuario, fecha) VALUES (?, ?) ON CONFLICT DO NOTHING", (u_id, hoy))
         conn.commit()
 
     if menu == "📊 Dashboard Dietario":
@@ -1324,7 +1324,7 @@ def main():
                                 stat = extract_calories_ocr(row['contenido'])
                                 if isinstance(stat, float):
                                     st.success(f"Inyectando Actividad ({stat} Kal) a {st.session_state['active_user_name']}.")
-                                    conn.execute("INSERT OR IGNORE INTO ActividadDiaria (id_usuario, fecha) VALUES (?, ?)", (u_id, hoy))
+                                    conn.execute("INSERT INTO ActividadDiaria (id_usuario, fecha) VALUES (?, ?) ON CONFLICT DO NOTHING", (u_id, hoy))
                                     conn.execute("UPDATE ActividadDiaria SET calorias_activas = calorias_activas + ? WHERE fecha = ? AND id_usuario=?", (stat, hoy, u_id))
                                     conn.execute("UPDATE Pendientes SET procesado = 1 WHERE id = ?", (int(row['id']),))
                                     conn.commit()
@@ -1333,7 +1333,7 @@ def main():
                                     total_kcal = sum(stat.values())
                                     st.success(f"Inyectando Actividad Multi-día ({total_kcal} kcal) a {st.session_state['active_user_name']}.")
                                     for d_str, cals in stat.items():
-                                        conn.execute("INSERT OR IGNORE INTO ActividadDiaria (id_usuario, fecha) VALUES (?, ?)", (u_id, d_str))
+                                        conn.execute("INSERT INTO ActividadDiaria (id_usuario, fecha) VALUES (?, ?) ON CONFLICT DO NOTHING", (u_id, d_str))
                                         conn.execute("UPDATE ActividadDiaria SET calorias_activas = calorias_activas + ? WHERE fecha = ? AND id_usuario=?", (cals, d_str, u_id))
                                     conn.execute("UPDATE Pendientes SET procesado = 1 WHERE id = ?", (int(row['id']),))
                                     conn.commit()
