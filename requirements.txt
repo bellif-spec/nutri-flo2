@@ -1,0 +1,11 @@
+streamlit
+pandas
+plotly
+python-telegram-bot
+pyTelegramBotAPI
+python-dotenv
+pdfplumber
+pytesseract
+Pillow
+psycopg2-binary
+SQLAlchemy
